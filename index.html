@@ -6,57 +6,31 @@
 <title>우리집 집안일 앱</title>
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  /* (사용자님의 기존 스타일 시트는 동일하므로 생략하지만, 실제 파일에는 유지하세요) */
-  :root { --bg: #f5f0e8; --surface: #fffdf8; --surface2: #f0ebe0; --border: #d8d0c0; --text: #2a2420; --text2: #6b5f52; --accent: #c85a3a; --accent2: #e8a430; --green: #4a9060; --blue: #3a6090; --shadow: rgba(80,60,40,0.12); }
-  .dark { --bg: #1a1714; --surface: #242018; --surface2: #2e2820; --border: #3a3228; --text: #f0e8d8; --text2: #a09080; --accent: #e06840; --accent2: #f0b840; --green: #5ab070; --blue: #5080b0; --shadow: rgba(0,0,0,0.4); }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: all 0.4s ease; }
-  .header { background: var(--surface); border-bottom: 2px solid var(--border); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px var(--shadow); }
-  .header-title { font-family: 'Gowun Dodum', cursive; font-size: 22px; color: var(--accent); letter-spacing: -0.5px; }
-  .header-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
-  .header-right { display: flex; gap: 8px; align-items: center; }
-  .btn-sm { padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--surface2); color: var(--text); font-size: 12px; cursor: pointer; transition: all 0.2s; }
-  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
-  .nav { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
-  .nav-btn { padding: 12px 20px; border: none; background: transparent; color: var(--text2); font-size: 13px; cursor: pointer; border-bottom: 2.5px solid transparent; transition: all 0.2s; }
-  .nav-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 700; }
+  /* 화면 깨짐 방지를 위한 핵심 디자인 코드 */
+  :root { --bg: #f5f0e8; --surface: #fffdf8; --border: #d8d0c0; --accent: #c85a3a; --green: #4a9060; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); margin: 0; padding: 0; }
+  .header { background: var(--surface); padding: 15px; border-bottom: 2px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .header-title { font-family: 'Gowun Dodum', cursive; font-size: 22px; color: var(--accent); }
   .main { padding: 20px; max-width: 600px; margin: 0 auto; }
-  .section { display: none; }
-  .section.active { display: block; }
-  .card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px var(--shadow); }
-  .card-title { font-size: 15px; font-weight: 700; margin-bottom: 14px; color: var(--text); display: flex; align-items: center; gap: 8px; }
-  .chore-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .chore-item { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 12px; padding: 14px; position: relative; transition: all 0.2s; }
-  .chore-item.done { border-color: var(--green); background: color-mix(in srgb, var(--green) 8%, var(--surface2)); }
-  .chore-item.exempt { border-color: var(--blue); background: color-mix(in srgb, var(--blue) 8%, var(--surface2)); opacity: 0.8; }
-  .chore-name { font-size: 13px; color: var(--text2); margin-bottom: 4px; }
-  .chore-person { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; }
-  .badge-done { background: var(--green); color: white; }
-  .badge-pending { background: var(--accent); color: white; }
-  .badge-exempt { background: var(--blue); color: white; }
-  .upload-btn { width: 100%; margin-top: 8px; padding: 6px; border-radius: 8px; border: 1.5px dashed var(--border); color: var(--text2); font-size: 11px; cursor: pointer; }
-  .photo-thumb { width: 100%; height: 70px; object-fit: cover; border-radius: 8px; margin-top: 8px; cursor: pointer; }
-  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px; }
-  .modal-overlay.open { display: flex; }
-  .modal { background: var(--surface); border-radius: 20px; padding: 24px; width: 100%; max-width: 420px; border: 1.5px solid var(--border); }
-  .tag { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; margin-left: 6px; }
-  .tag-admin { background: var(--accent2); color: #333; }
-  .tag-user { background: var(--blue); color: white; }
+  .card { background: var(--surface); border-radius: 16px; padding: 20px; border: 1.5px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .chore-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+  .chore-item { background: #fdfaf5; border: 1.5px solid var(--border); border-radius: 12px; padding: 15px; text-align: center; }
+  .photo-thumb { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; margin-top: 10px; }
+  .btn-upload { width: 100%; margin-top: 10px; padding: 8px; border-radius: 8px; border: 1px dashed var(--accent); cursor: pointer; background: transparent; color: var(--accent); }
+  .login-screen { height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); }
+  .user-btn { padding: 15px 30px; margin: 5px; border-radius: 10px; border: 2px solid var(--border); background: var(--surface); cursor: pointer; font-weight: 700; }
 </style>
 </head>
 <body>
 
-<div class="login-screen" id="loginScreen">
-  <div class="login-card">
-    <div class="login-title">🏠 우리집</div>
-    <div class="login-sub">집안일 인증 앱<br>누구세요?</div>
-    <div class="user-btns">
+<div id="loginScreen" class="login-screen">
+  <div style="text-align:center;">
+    <h1 style="color:var(--accent); font-family:'Gowun Dodum';">🏠 우리집</h1>
+    <div id="userBtns">
       <button class="user-btn" onclick="login('진철')">진철</button>
-      <button class="user-btn admin" onclick="login('진주')">진주 👑</button>
+      <button class="user-btn" onclick="login('진주')">진주 👑</button>
       <button class="user-btn" onclick="login('은수')">은수</button>
       <button class="user-btn" onclick="login('은하')">은하</button>
     </div>
@@ -65,35 +39,25 @@
 
 <div id="app" style="display:none;">
   <div class="header">
-    <div><div class="header-title">🏠 우리집</div><div class="header-sub" id="headerSub"></div></div>
-    <div class="header-right"><span id="userTag"></span><button class="btn-sm" onclick="logout()">로그아웃</button></div>
-  </div>
-  <div class="nav">
-    <button class="nav-btn active" onclick="showSection('today', this)">오늘</button>
-    <button class="nav-btn" onclick="showSection('schedule', this)">역할표</button>
-    <button class="nav-btn" onclick="showSection('game', this)">🎲 역할뽑기</button>
-    <button class="nav-btn" onclick="showSection('penalty', this)">벌금</button>
-    <button class="nav-btn" onclick="showSection('history', this)">기록</button>
-    <button class="nav-btn" onclick="showSection('manage', this)" id="manageTab" style="display:none;">⚙️ 관리</button>
+    <div class="header-title">🏠 우리집</div>
+    <div id="userInfo" style="font-weight:700;"></div>
+    <button onclick="location.reload()">로그아웃</button>
   </div>
   <div class="main">
-    <div class="section active" id="section-today">
-      <div class="info-bar" id="periodInfoBar"></div>
-      <div class="card">
-        <div class="card-title"><span class="icon">📋</span> 오늘의 집안일</div>
-        <div class="chore-grid" id="choreGrid"></div>
-      </div>
-      </div>
+    <div class="card">
+      <div style="font-weight:700;">📅 오늘의 역할</div>
+      <div id="choreGrid" class="chore-grid"></div>
     </div>
+  </div>
 </div>
 
 <script>
-// ============ FIREBASE CONFIG ============
+// 사용자님의 Firebase 실제 설정값 적용
 const firebaseConfig = {
   apiKey: "AIzaSyDARPxh-WS07lWMeo4IBy4MgWkLpaRxbkQ",
   authDomain: "familyhousehold-cf5a6.firebaseapp.com",
   projectId: "familyhousehold-cf5a6",
-  databaseURL: "https://familyhousehold-cf5a6-default-rtdb.firebaseio.com",
+  databaseURL: "https://familyhousehold-cf5a6-default-rtdb.firebaseio.com", // 수동 보완
   storageBucket: "familyhousehold-cf5a6.firebasestorage.app",
   messagingSenderId: "1087083698440",
   appId: "1:1087083698440:web:7ddd9f45c28d06368274bd"
@@ -102,93 +66,51 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ============ STATE & SYNC ============
-const PEOPLE = ['진철', '진주', '은수', '은하'];
-const ADMIN = '진주';
-let state = {
-  currentUser: null,
-  roles: { '진철': '설거지', '진주': '바닥청소', '은수': '분리수거', '은하': '빨래' },
-  photos: {},
-  exempts: [],
-  notices: []
-};
+const ROLES = { '진철': '설거지', '진주': '바닥청소', '은수': '분리수거', '은하': '빨래' };
+let currentUser = null;
 
-// 실시간 데이터 수신 (아이폰-안드로이드 연동 핵심)
-db.ref('homeAppState').on('value', (snapshot) => {
-  const data = snapshot.val();
-  if (data) {
-    state = { ...state, ...data };
-    renderAll();
-  }
-});
-
-function saveState() {
-  db.ref('homeAppState').set(state);
+function login(name) {
+  currentUser = name;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('userInfo').textContent = name + "님";
+  syncData();
 }
 
-// ============ CHORE & PHOTO LOGIC ============
-function renderToday() {
-  const today = new Date().toISOString().slice(0,10);
-  const grid = document.getElementById('choreGrid');
-  grid.innerHTML = '';
-
-  PEOPLE.forEach(person => {
-    const chore = state.roles[person];
-    const key = `${today}_${person}`;
-    const photo = state.photos[key];
-    const isExempt = state.exempts.some(e => e.person === person && e.date === today);
-    const isMe = (state.currentUser === person || state.currentUser === ADMIN);
-
-    let actionHtml = '';
-    if (photo) {
-      actionHtml = `<img class="photo-thumb" src="${photo.url}" onclick="viewPhoto('${photo.url}')">`;
-      if (isMe) {
-        actionHtml += `
-          <div class="btn-row" style="margin-top:5px; display:flex; gap:5px;">
-            <button class="btn-sm" onclick="openUpload('${person}','${chore}','${today}')">교체</button>
-            <button class="btn-sm" style="color:#c85a3a; border-color:#c85a3a;" onclick="deletePhoto('${person}','${today}')">삭제</button>
-          </div>`;
-      }
-    } else if (!isExempt && isMe) {
-      actionHtml = `<button class="upload-btn" onclick="openUpload('${person}','${chore}','${today}')">📷 사진 올리기</button>`;
-    }
-
-    const div = document.createElement('div');
-    div.className = 'chore-item' + (photo ? ' done' : isExempt ? ' exempt' : '');
-    div.innerHTML = `
-      <div class="chore-name">${chore}</div>
-      <div class="chore-person">${person}</div>
-      <div class="badge ${photo ? 'badge-done' : isExempt ? 'badge-exempt' : 'badge-pending'}">
-        ${photo ? '✓ 완료' : isExempt ? '면제' : '미완'}
-      </div>
-      ${actionHtml}
-    `;
-    grid.appendChild(div);
+function syncData() {
+  const today = new Date().toISOString().slice(0, 10);
+  // 서버에서 데이터 실시간 가져오기
+  db.ref('dailyPhotos/' + today).on('value', (snapshot) => {
+    const data = snapshot.val() || {};
+    render(data);
   });
 }
 
-// 사진 삭제 함수
-function deletePhoto(person, date) {
-  if (confirm(`${person}님의 사진을 삭제할까요?`)) {
-    const key = `${date}_${person}`;
-    delete state.photos[key];
-    saveState();
+function render(data) {
+  const grid = document.getElementById('choreGrid');
+  grid.innerHTML = '';
+  Object.keys(ROLES).forEach(person => {
+    const item = document.createElement('div');
+    item.className = 'chore-item';
+    const photo = data[person];
+    
+    item.innerHTML = `
+      <div style="font-size:12px; color:#666;">${ROLES[person]}</div>
+      <div style="font-size:16px; font-weight:700;">${person}</div>
+      ${photo ? `<img src="${photo}" class="photo-thumb">` : `<div style="color:var(--accent); font-size:11px; margin-top:10px;">미완료</div>`}
+      ${person === currentUser ? `<button class="btn-upload" onclick="uploadPhoto('${person}')">📷 인증하기</button>` : ''}
+    `;
+    grid.appendChild(item);
+  });
+}
+
+function uploadPhoto(person) {
+  const url = prompt("사진 이미지 주소를 입력하세요 (테스트용):"); 
+  if (url) {
+    const today = new Date().toISOString().slice(0, 10);
+    db.ref('dailyPhotos/' + today + '/' + person).set(url);
+    alert("인증 완료!");
   }
-}
-
-// (기타 login, logout, renderAll 등 함수 유지)
-function login(person) {
-  state.currentUser = person;
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  document.getElementById('userTag').innerHTML = `<span class="tag ${person===ADMIN?'tag-admin':'tag-user'}">${person}</span>`;
-  if(person === ADMIN) document.getElementById('manageTab').style.display = 'block';
-  renderAll();
-}
-
-function renderAll() {
-  renderToday();
-  // ... (다른 렌더링 함수들 호출)
 }
 </script>
 </body>
