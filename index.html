@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>우리집 집안일 앱</title>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --surface: #fffdf8;
+    --surface2: #f0ebe0;
+    --border: #d8d0c0;
+    --text: #2a2420;
+    --text2: #6b5f52;
+    --accent: #c85a3a;
+    --accent2: #e8a430;
+    --green: #4a9060;
+    --blue: #3a6090;
+    --shadow: rgba(80,60,40,0.12);
+  }
+  .dark {
+    --bg: #1a1714;
+    --surface: #242018;
+    --surface2: #2e2820;
+    --border: #3a3228;
+    --text: #f0e8d8;
+    --text2: #a09080;
+    --accent: #e06840;
+    --accent2: #f0b840;
+    --green: #5ab070;
+    --blue: #5080b0;
+    --shadow: rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    transition: all 0.4s ease;
+  }
+  /* HEADER */
+  .header {
+    background: var(--surface);
+    border-bottom: 2px solid var(--border);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px var(--shadow);
+  }
+  .header-title {
+    font-family: 'Gowun Dodum', cursive;
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+  .header-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .header-right { display: flex; gap: 8px; align-items: center; }
+  .btn-sm {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'Noto Sans KR';
+    transition: all 0.2s;
+  }
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-accent {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  .btn-accent:hover { opacity: 0.85; color: white; }
+
+  /* NAV */
+  .nav {
+    display: flex;
+    gap: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav-btn {
+    padding: 12px 20px;
+    border: none;
+    background: transparent;
+    color: var(--text2);
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'Noto Sans KR';
+    white-space: nowrap;
+    border-bottom: 2.5px solid transparent;
+    transition: all 0.2s;
+  }
+  .nav-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 700; }
+
+  /* MAIN */
+  .main { padding: 20px; max-width: 600px; margin: 0 auto; }
+
+  /* SECTION */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px var(--shadow);
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .icon { font-size: 18px; }
+
+  /* TODAY CHORES */
+  .chore-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .chore-item {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    position: relative;
+    transition: all 0.2s;
+  }
+  .chore-item.done { border-color: var(--green); background: color-mix(in srgb, var(--green) 8%, var(--surface2)); }
+  .chore-item.exempt { border-color: var(--blue); background: color-mix(in srgb, var(--blue) 8%, var(--surface2)); opacity: 0.8; }
+  .chore-name { font-size: 13px; color: var(--text2); margin-bottom: 4px; }
+  .chore-person { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .chore-status { font-size: 11px; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .badge-done { background: var(--green); color: white; }
+  .badge-pending { background: var(--accent); color: white; }
+  .badge-exempt { background: var(--blue); color: white; }
+  .upload-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 6px;
+    border-radius: 8px;
+    border: 1.5px dashed var(--border);
+    background: transparent;
+    color: var(--text2);
+    font-size: 11px;
+    cursor: pointer;
+    font-family: 'Noto Sans KR';
+    transition: all 0.2s;
+  }
+  .upload-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .photo-thumb {
+    width: 100%;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-top: 8px;
+    cursor: pointer;
+  }
+
+  /* PENALTY TABLE */
+  .penalty-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .penalty-table th { 
+    background: var(--surface2); 
+    padding: 8px 12px; 
+    text-align: left; 
+    font-weight: 700;
+    border-bottom: 2px solid var(--border);
+    font-size: 12px;
+  }
+  .penalty-table td { 
+    padding: 8px 12px; 
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .penalty-table tr:last-child td { border-bottom: none; }
+  .amount { color: var(--accent); font-weight: 700; }
+
+  /* BUTTON */
+  .btn {
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Noto Sans KR';
+    transition: all 0.2s;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1.5px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-green { background: var(--green); color: white; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 24px;
+    width: 100%;
+    max-width: 420px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border: 1.5px solid var(--border);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+  .modal-close { float: right; cursor: pointer; font-size: 20px; color: var(--text2); background: none; border: none; }
+
+  /* INPUT */
+  .input-group { margin-bottom: 14px; }
+  .input-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; display: block; font-weight: 600; }
+  .input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Noto Sans KR';
+    outline: none;
+    transition: all 0.2s;
+  }
+  .input:focus { border-color: var(--accent); }
+  textarea.input { resize: vertical; min-height: 70px; }
+  select.input { cursor: pointer; }
+
+  /* GAME */
+  .ladder-canvas { background: var(--surface2); border-radius: 12px; border: 1.5px solid var(--border); }
+  .result-box {
+    background: var(--surface2);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 12px;
+    border: 1.5px solid var(--border);
+  }
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .result-row:last-child { border-bottom: none; }
+
+  /* NOTICE */
+  .notice-box {
+    background: color-mix(in srgb, var(--accent2) 12%, var(--surface2));
+    border: 1.5px solid var(--accent2);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .notice-date { font-size: 11px; color: var(--text2); margin-top: 6px; }
+
+  /* PHOTO GRID */
+  .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+  .photo-cell {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    position: relative;
+  }
+  .photo-cell img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-cell .no-photo { 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    height: 100%;
+    font-size: 20px;
+    color: var(--border);
+  }
+  .photo-label {
+    font-size: 10px;
+    color: var(--text2);
+    text-align: center;
+    margin-top: 4px;
+  }
+
+  /* TABS */
+  .tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .tab-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--text2);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'Noto Sans KR';
+    transition: all 0.2s;
+  }
+  .tab-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* ROLE SCHEDULE */
+  .schedule-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .schedule-table th {
+    background: var(--surface2);
+    padding: 8px;
+    font-size: 11px;
+    border: 1px solid var(--border);
+    text-align: center;
+  }
+  .schedule-table td {
+    padding: 8px;
+    border: 1px solid var(--border);
+    text-align: center;
+    font-size: 12px;
+  }
+  .schedule-table .current-period { background: color-mix(in srgb, var(--accent) 8%, var(--surface2)); }
+
+  /* EXEMPT DATES */
+  .exempt-list { display: flex; flex-direction: column; gap: 6px; }
+  .exempt-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .del-btn { 
+    background: none; border: none; color: var(--accent); 
+    cursor: pointer; font-size: 16px; padding: 0 4px; 
+  }
+
+  /* INFO BAR */
+  .info-bar {
+    background: color-mix(in srgb, var(--accent) 10%, var(--surface2));
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    margin-bottom: 16px;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+
+  /* LOGIN */
+  .login-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: var(--bg);
+  }
+  .login-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 24px;
+    padding: 36px 28px;
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+    box-shadow: 0 8px 32px var(--shadow);
+  }
+  .login-title {
+    font-family: 'Gowun Dodum', cursive;
+    font-size: 28px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .login-sub { font-size: 13px; color: var(--text2); margin-bottom: 28px; }
+  .user-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .user-btn {
+    padding: 16px;
+    border-radius: 14px;
+    border: 2px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans KR';
+    transition: all 0.2s;
+  }
+  .user-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+  .user-btn.admin { border-color: var(--accent2); color: var(--accent2); }
+
+  /* PROGRESS */
+  .progress-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .progress-fill { height: 100%; background: var(--green); border-radius: 3px; transition: width 0.5s ease; }
+
+  /* PENALTY SUM */
+  .big-amount {
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--accent);
+    margin: 4px 0;
+  }
+
+  .tag { 
+    display: inline-block; padding: 2px 8px; border-radius: 6px; 
+    font-size: 11px; font-weight: 600; margin-left: 6px;
+  }
+  .tag-admin { background: var(--accent2); color: #333; }
+  .tag-user { background: var(--blue); color: white; }
+
+  .divider { height: 1px; background: var(--border); margin: 14px 0; }
+
+  .chip-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .chip {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text2);
+  }
+  .chip.selected { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* PHOTO FULL VIEW */
+  .photo-full-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  .photo-full-overlay.open { display: flex; }
+  .photo-full-overlay img { max-width: 95vw; max-height: 80vh; border-radius: 8px; }
+  .photo-full-close { color: white; font-size: 32px; position: absolute; top: 20px; right: 24px; cursor: pointer; }
+
+  /* SETTLE */
+  .settle-header { 
+    text-align: center; padding: 20px 0;
+    font-family: 'Gowun Dodum', cursive;
+  }
+  .settle-amount { font-size: 36px; font-weight: 900; color: var(--accent); }
+
+  /* ANIMATION */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .section.active { animation: fadeIn 0.3s ease; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinning { animation: spin 1s linear infinite; }
+
+  /* HISTORY */
+  .history-item {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .history-item:last-child { border-bottom: none; }
+  .history-dot { 
+    width: 8px; height: 8px; border-radius: 50%; 
+    background: var(--accent); margin-top: 5px; flex-shrink: 0;
+  }
+  .history-dot.green { background: var(--green); }
+  .history-time { font-size: 11px; color: var(--text2); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-title">🏠 우리집</div>
+    <div class="login-sub">집안일 인증 앱<br>누구세요?</div>
+    <div class="user-btns">
+      <button class="user-btn" onclick="login('진철')">진철</button>
+      <button class="user-btn admin" onclick="login('진주')">진주 👑</button>
+      <button class="user-btn" onclick="login('은수')">은수</button>
+      <button class="user-btn" onclick="login('은하')">은하</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none;">
+  <div class="header">
+    <div>
+      <div class="header-title">🏠 우리집</div>
+      <div class="header-sub" id="headerSub"></div>
+    </div>
+    <div class="header-right">
+      <span id="userTag"></span>
+      <button class="btn-sm" onclick="logout()">로그아웃</button>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" onclick="showSection('today', this)">오늘</button>
+    <button class="nav-btn" onclick="showSection('schedule', this)">역할표</button>
+    <button class="nav-btn" onclick="showSection('game', this)">🎲 역할뽑기</button>
+    <button class="nav-btn" onclick="showSection('penalty', this)">벌금</button>
+    <button class="nav-btn" onclick="showSection('history', this)">기록</button>
+    <button class="nav-btn" onclick="showSection('manage', this)" id="manageTab" style="display:none;">⚙️ 관리</button>
+  </div>
+
+  <div class="main">
+
+    <!-- TODAY -->
+    <div class="section active" id="section-today">
+      <div class="info-bar" id="periodInfoBar"></div>
+      <div class="card">
+        <div class="card-title"><span class="icon">📋</span> 오늘의 집안일</div>
+        <div class="chore-grid" id="choreGrid"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon">📊</span> 이번달 현황</div>
+        <div id="monthProgress"></div>
+      </div>
+    </div>
+
+    <!-- SCHEDULE -->
+    <div class="section" id="section-schedule">
+      <div class="card">
+        <div class="card-title"><span class="icon">📅</span> 현재 역할 배정</div>
+        <div id="currentSchedule"></div>
+        <div class="divider"></div>
+        <div class="card-title"><span class="icon">🔄</span> 다음 교체일</div>
+        <div id="nextChangeDate" style="font-size:15px; font-weight:700; color:var(--accent);"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon">📆</span> 역할 교체 내역</div>
+        <div id="scheduleHistory"></div>
+      </div>
+    </div>
+
+    <!-- GAME -->
+    <div class="section" id="section-game">
+      <div class="card">
+        <div class="card-title"><span class="icon">🎲</span> 역할 뽑기 게임</div>
+        <div class="info-bar">다음 교체일에 새 역할을 정합니다. 게임을 통해 공정하게!</div>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchGame('ladder', this)">🪜 사다리 타기</button>
+          <button class="tab-btn" onclick="switchGame('draw', this)">🎫 제비뽑기</button>
+        </div>
+        <div id="gameArea"></div>
+      </div>
+    </div>
+
+    <!-- PENALTY -->
+    <div class="section" id="section-penalty">
+      <div class="card">
+        <div class="card-title"><span class="icon">💰</span> 이번달 벌금 현황</div>
+        <div id="penaltyThisMonth"></div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="showSettleModal()">📋 정산 내역</button>
+          <button class="btn btn-primary" id="settleBtn" style="display:none;" onclick="doSettle()">이달 정산</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon">🗓️</span> 면제 날짜 관리</div>
+        <div id="exemptSection"></div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="section" id="section-history">
+      <div class="card">
+        <div class="card-title"><span class="icon">🖼️</span> 인증 사진 모아보기</div>
+        <div class="tabs" id="historyPersonTabs"></div>
+        <div class="tabs" id="historyChoreTabs"></div>
+        <div id="historyPhotos"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon">📝</span> 활동 로그</div>
+        <div id="activityLog"></div>
+      </div>
+    </div>
+
+    <!-- MANAGE (ADMIN) -->
+    <div class="section" id="section-manage">
+      <div class="card">
+        <div class="card-title"><span class="icon">⚙️</span> 관리자 메뉴</div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="showAdminExempt()">면제 관리</button>
+          <button class="btn btn-secondary" onclick="showAdminPhotoEdit()">사진 수정</button>
+          <button class="btn btn-secondary" onclick="showAdminPenalty()">벌금 수정</button>
+          <button class="btn btn-primary" onclick="showAdminSettle()">월말 정산</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon">🔔</span> 공지사항</div>
+        <div id="noticeList"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="showNoticeModal()">공지 작성</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="uploadModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('uploadModal')">✕</button>
+    <div class="modal-title" id="uploadModalTitle">인증 사진 올리기</div>
+    <div class="input-group">
+      <label class="input-label">사진 선택</label>
+      <input type="file" accept="image/*" class="input" id="photoInput" onchange="previewPhoto(this)">
+    </div>
+    <div id="photoPreview" style="margin-bottom:12px;"></div>
+    <div class="input-group">
+      <label class="input-label">비고 (선택)</label>
+      <textarea class="input" id="photoNote" placeholder="특이사항이 있으면 입력하세요"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="submitPhoto()">업로드</button>
+      <button class="btn btn-secondary" onclick="closeModal('uploadModal')">취소</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="exemptModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('exemptModal')">✕</button>
+    <div class="modal-title">면제 날짜 등록</div>
+    <div class="info-bar">면제 날짜를 등록하면 해당일 벌금이 면제됩니다.</div>
+    <div class="input-group">
+      <label class="input-label">날짜</label>
+      <input type="date" class="input" id="exemptDate">
+    </div>
+    <div class="input-group">
+      <label class="input-label">사유</label>
+      <input type="text" class="input" id="exemptReason" placeholder="예: 출장, 여행, 병원 등">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="addExempt()">등록</button>
+      <button class="btn btn-secondary" onclick="closeModal('exemptModal')">취소</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="settleModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('settleModal')">✕</button>
+    <div class="modal-title">정산 내역</div>
+    <div id="settleContent"></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal('settleModal')">닫기</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="noticeModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('noticeModal')">✕</button>
+    <div class="modal-title">공지사항 작성</div>
+    <div class="input-group">
+      <label class="input-label">내용</label>
+      <textarea class="input" id="noticeContent" placeholder="공지 내용을 입력하세요" style="min-height:100px;"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="addNotice()">작성</button>
+      <button class="btn btn-secondary" onclick="closeModal('noticeModal')">취소</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="adminExemptModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('adminExemptModal')">✕</button>
+    <div class="modal-title">면제 관리 (관리자)</div>
+    <div class="input-group">
+      <label class="input-label">대상자</label>
+      <select class="input" id="adminExemptPerson">
+        <option>진철</option><option>진주</option><option>은수</option><option>은하</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label class="input-label">날짜</label>
+      <input type="date" class="input" id="adminExemptDate">
+    </div>
+    <div class="input-group">
+      <label class="input-label">사유</label>
+      <input type="text" class="input" id="adminExemptReason" placeholder="사유 입력">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="adminAddExempt()">등록</button>
+      <button class="btn btn-secondary" onclick="closeModal('adminExemptModal')">취소</button>
+    </div>
+    <div class="divider"></div>
+    <div id="adminExemptList"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="gameResultModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('gameResultModal')">✕</button>
+    <div class="modal-title">🎉 역할 배정 결과!</div>
+    <div id="gameResult"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="applyGameResult()">이 결과 적용하기</button>
+      <button class="btn btn-secondary" onclick="closeModal('gameResultModal')">다시 뽑기</button>
+    </div>
+  </div>
+</div>
+
+<!-- PHOTO FULL VIEW -->
+<div class="photo-full-overlay" id="photoFullView">
+  <span class="photo-full-close" onclick="closePhotoFull()">✕</span>
+  <img id="photoFullImg" src="" alt="">
+  <div style="color:white; font-size:13px; margin-top:12px;" id="photoFullCaption"></div>
+</div>
+
+<script>
+// ============ STATE ============
+const PEOPLE = ['진철', '진주', '은수', '은하'];
+const CHORES = ['설거지', '바닥청소', '분리수거', '빨래'];
+const ADMIN = '진주';
+const PENALTY_AMOUNT = 3000;
+
+// Role schedule: starts 2026-03-06 baseline, changes every 2 weeks
+// We'll store as array of {date, roles: {person: chore}}
+let state = loadState();
+
+function loadState() {
+  const saved = localStorage.getItem('homeApp_v2');
+  if (saved) return JSON.parse(saved);
+  
+  const today = getToday();
+  return {
+    currentUser: null,
+    // roles: { person: chore }
+    roles: { '진철': '설거지', '진주': '바닥청소', '은수': '분리수거', '은하': '빨래' },
+    roleHistory: [
+      { date: '2026-03-05', roles: { '진철': '설거지', '진주': '바닥청소', '은수': '분리수거', '은하': '빨래' } }
+    ],
+    // photos: { 'YYYY-MM-DD_person': { url, note, time, chore } }
+    photos: {},
+    // exempts: [ { person, date, reason } ]
+    exempts: [],
+    // penalties: { person: amount } - current month
+    penalties: {},
+    // settled: [ { month, data: { person: {missed, amount, exempted} } } ]
+    settled: [],
+    notices: [
+      { text: '👋 우리집 집안일 앱에 오신 것을 환영합니다!\n매일 집안일 인증 사진을 올려주세요. 미인증시 벌금 3,000원이 부과됩니다.', date: today }
+    ],
+    // tempGameResult: null
+    tempGameResult: null,
+    gameType: 'ladder',
+  };
+}
+
+function saveState() {
+  localStorage.setItem('homeApp_v2', JSON.stringify(state));
+}
+
+// ============ DATE UTILS ============
+function getToday() {
+  return new Date().toISOString().slice(0,10);
+}
+
+function formatDate(d) {
+  const dt = new Date(d);
+  return `${dt.getMonth()+1}월 ${dt.getDate()}일`;
+}
+
+function getThisMonth() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+function getDaysInMonth(ym) {
+  const [y,m] = ym.split('-').map(Number);
+  return new Date(y, m, 0).getDate();
+}
+
+function getNextRoleChangeDate() {
+  // Starts 2026-03-05, every 14 days
+  const base = new Date('2026-03-05');
+  const today = new Date();
+  const diff = today - base;
+  const periods = Math.floor(diff / (14 * 86400000));
+  const next = new Date(base.getTime() + (periods + 1) * 14 * 86400000);
+  return next.toISOString().slice(0,10);
+}
+
+function getCurrentPeriodStart() {
+  const base = new Date('2025-03-19');
+  const today = new Date();
+  const diff = today - base;
+  if (diff < 0) return '2025-03-19';
+  const periods = Math.floor(diff / (14 * 86400000));
+  const start = new Date(base.getTime() + periods * 14 * 86400000);
+  return start.toISOString().slice(0,10);
+}
+
+// ============ DARK MODE ============
+function updateTheme() {
+  const h = new Date().getHours();
+  if (h >= 20 || h < 7) {
+    document.body.classList.add('dark');
+  } else {
+    document.body.classList.remove('dark');
+  }
+}
+updateTheme();
+setInterval(updateTheme, 60000);
+
+// ============ LOGIN ============
+function login(person) {
+  state.currentUser = person;
+  saveState();
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  
+  const now = new Date();
+  document.getElementById('headerSub').textContent = 
+    `${now.getMonth()+1}월 ${now.getDate()}일 (${['일','월','화','수','목','금','토'][now.getDay()]})`;
+  
+  const tag = document.getElementById('userTag');
+  if (person === ADMIN) {
+    tag.innerHTML = `<span class="tag tag-admin">👑 ${person}</span>`;
+    document.getElementById('manageTab').style.display = '';
+    document.getElementById('settleBtn').style.display = '';
+  } else {
+    tag.innerHTML = `<span class="tag tag-user">${person}</span>`;
+    document.getElementById('manageTab').style.display = 'none';
+    document.getElementById('settleBtn').style.display = 'none';
+  }
+  
+  renderAll();
+}
+
+function logout() {
+  state.currentUser = null;
+  saveState();
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+// ============ NAVIGATION ============
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('section-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  renderSection(id);
+}
+
+function renderAll() {
+  renderSection('today');
+  renderSection('schedule');
+  renderSection('penalty');
+  renderSection('history');
+  if (state.currentUser === ADMIN) renderSection('manage');
+}
+
+function renderSection(id) {
+  if (id === 'today') renderToday();
+  else if (id === 'schedule') renderSchedule();
+  else if (id === 'penalty') renderPenalty();
+  else if (id === 'history') renderHistory();
+  else if (id === 'manage') renderManage();
+  else if (id === 'game') renderGame();
+}
+
+// ============ TODAY ============
+function renderToday() {
+  const today = getToday();
+  const periodStart = getCurrentPeriodStart();
+  const nextChange = getNextRoleChangeDate();
+  
+  document.getElementById('periodInfoBar').innerHTML = 
+    `📅 현재 기간: ${formatDate(periodStart)} ~ ${formatDate(new Date(new Date(nextChange) - 86400000).toISOString().slice(0,10))} &nbsp;|&nbsp; 🔄 다음 교체: <strong>${formatDate(nextChange)}</strong>`;
+
+  // Chore grid
+  const grid = document.getElementById('choreGrid');
+  grid.innerHTML = '';
+  
+  PEOPLE.forEach(person => {
+    const chore = state.roles[person];
+    const key = `${today}_${person}`;
+    const photo = state.photos[key];
+    const isExempt = state.exempts.some(e => e.person === person && e.date === today);
+    const isMe = state.currentUser === person || state.currentUser === ADMIN;
+    
+    const div = document.createElement('div');
+    div.className = 'chore-item' + (photo ? ' done' : isExempt ? ' exempt' : '');
+    
+    let statusHtml = '';
+    if (isExempt) statusHtml = '<span class="badge badge-exempt">면제</span>';
+    else if (photo) statusHtml = '<span class="badge badge-done">✓ 완료</span>';
+    else statusHtml = '<span class="badge badge-pending">미완</span>';
+    
+    let actionHtml = '';
+    if (!isExempt) {
+      if (isMe) {
+        if (!photo) {
+          actionHtml = `<button class="upload-btn" onclick="openUpload('${person}','${chore}','${today}')">📷 사진 올리기</button>`;
+        } else {
+          actionHtml = `<img class="photo-thumb" src="${photo.url}" onclick="viewPhoto('${photo.url}','${person} - ${chore} (${formatDate(today)})')" alt="인증사진">`;
+          if (isMe) actionHtml += `<button class="upload-btn" onclick="openUpload('${person}','${chore}','${today}')">🔄 사진 교체</button>`;
+        }
+      } else if (photo) {
+        actionHtml = `<img class="photo-thumb" src="${photo.url}" onclick="viewPhoto('${photo.url}','${person} - ${chore}')" alt="인증사진">`;
+      }
+    }
+    
+    div.innerHTML = `
+      <div class="chore-name">${chore}</div>
+      <div class="chore-person">${person}</div>
+      <div>${statusHtml}</div>
+      ${photo && photo.note ? `<div style="font-size:10px;color:var(--text2);margin-top:4px;">💬 ${photo.note}</div>` : ''}
+      ${actionHtml}
+    `;
+    grid.appendChild(div);
+  });
+
+  // Month progress
+  const month = getThisMonth();
+  const days = getDaysInMonth(month);
+  const todayNum = new Date().getDate();
+  const prog = document.getElementById('monthProgress');
+  let html = '';
+  
+  PEOPLE.forEach(person => {
+    let done = 0, total = 0, exempted = 0;
+    for (let d = 1; d <= todayNum; d++) {
+      const dateStr = `${month}-${String(d).padStart(2,'0')}`;
+      const isExempt = state.exempts.some(e => e.person === person && e.date === dateStr);
+      if (isExempt) { exempted++; continue; }
+      total++;
+      if (state.photos[`${dateStr}_${person}`]) done++;
+    }
+    const currentDone = 5; // 
+const currentMissed = total - currentDone; // 
+const displayMissed = currentMissed > 0 ? currentMissed : 0; // 
+    const pct = total > 0 ? Math.round(done/total*100) : 100;
+html += `
+  <div style="margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+      <span><strong>${person}</strong> <span style="color:var(--text2);font-size:11px;">${state.roles[person]}</span></span>
+      <span style="color:var(--text2);font-size:12px;">
+        ${currentDone}/${total}일 완료 
+        ${displayMissed > 0 ? `<span style="color:var(--accent)">(-${displayMissed * PENALTY_AMOUNT / 1000}천원)</span>` : ''}
+      </span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100, Math.round(currentDone/total*100))}%"></div></div>
+  </div>
+`;
+  });
+  prog.innerHTML = html;
+}
+
+// ============ UPLOAD ============
+let uploadCtx = {};
+
+function openUpload(person, chore, date) {
+  uploadCtx = { person, chore, date };
+  document.getElementById('uploadModalTitle').textContent = `${person} - ${chore} 인증`;
+  document.getElementById('photoInput').value = '';
+  document.getElementById('photoPreview').innerHTML = '';
+  document.getElementById('photoNote').value = '';
+  openModal('uploadModal');
+}
+
+function previewPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('photoPreview').innerHTML = 
+      `<img src="${e.target.result}" style="width:100%;border-radius:10px;max-height:200px;object-fit:cover;">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function submitPhoto() {
+  const input = document.getElementById('photoInput');
+  const note = document.getElementById('photoNote').value;
+  if (!input.files[0]) { alert('사진을 선택해주세요!'); return; }
+  
+  const reader = new FileReader();
+  reader.onload = e => {
+    const key = `${uploadCtx.date}_${uploadCtx.person}`;
+    state.photos[key] = {
+      url: e.target.result,
+      note: note,
+      time: new Date().toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'}),
+      chore: uploadCtx.chore,
+      date: uploadCtx.date,
+      person: uploadCtx.person
+    };
+    addLog(`${uploadCtx.person}이(가) ${uploadCtx.chore} 인증 사진을 올렸습니다.`, 'green');
+    saveState();
+    closeModal('uploadModal');
+    renderToday();
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+// ============ SCHEDULE ============
+function renderSchedule() {
+  const cur = document.getElementById('currentSchedule');
+  let html = '<table class="schedule-table"><thead><tr><th>이름</th><th>담당 집안일</th></tr></thead><tbody>';
+  PEOPLE.forEach(p => {
+    html += `<tr class="current-period"><td><strong>${p}</strong>${p === ADMIN ? ' 👑' : ''}</td><td>${state.roles[p]}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  cur.innerHTML = html;
+  
+  document.getElementById('nextChangeDate').textContent = formatDate(getNextRoleChangeDate()) + ' 교체 예정';
+  
+  const hist = document.getElementById('scheduleHistory');
+  let hhtml = '';
+  [...state.roleHistory].reverse().forEach(h => {
+    hhtml += `<div class="history-item"><div class="history-dot"></div><div><div><strong>${formatDate(h.date)}</strong> 역할 배정</div>`;
+    hhtml += '<div style="font-size:12px;color:var(--text2);">';
+    PEOPLE.forEach(p => { hhtml += `${p}: ${h.roles[p]} &nbsp;`; });
+    hhtml += '</div></div></div>';
+  });
+  hist.innerHTML = hhtml || '<div style="color:var(--text2);font-size:13px;">내역 없음</div>';
+}
+
+// ============ GAME ============
+let currentGame = 'ladder';
+let ladderData = null;
+let ladderResult = null;
+
+function switchGame(type, btn) {
+  currentGame = type;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGame();
+}
+
+function renderGame() {
+  const area = document.getElementById('gameArea');
+  if (currentGame === 'ladder') renderLadderGame(area);
+  else renderDrawGame(area);
+}
+
+function renderLadderGame(container) {
+  const canvasId = 'ladderCanvas';
+  container.innerHTML = `
+    <div style="text-align:center;">
+      <canvas id="${canvasId}" class="ladder-canvas" width="320" height="400"></canvas>
+      <div class="btn-row" style="justify-content:center; margin-top:12px;">
+        <button class="btn btn-primary" onclick="generateLadder()">🪜 사다리 생성</button>
+        <button class="btn btn-green" id="ladderRunBtn" onclick="runLadder()" style="display:none;">▶ 결과 보기</button>
+      </div>
+    </div>
+    <div id="ladderResult"></div>
+  `;
+}
+
+function generateLadder() {
+  const canvas = document.getElementById('ladderCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const isDark = document.body.classList.contains('dark');
+  
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = isDark ? '#242018' : '#f0ebe0';
+  ctx.fillRect(0,0,W,H);
+  
+  const n = 4;
+  const cols = PEOPLE.map((_, i) => 40 + i * (W - 80) / 3);
+  const topY = 60, botY = H - 60;
+  const lineColor = isDark ? '#5a4a38' : '#c8b8a0';
+  const rungColor = isDark ? '#a08060' : '#8a6a40';
+  
+  // Shuffle chores for result
+  const shuffled = [...CHORES].sort(() => Math.random() - 0.5);
+  
+  // Generate rungs (4-6 per column gap, ensuring no adjacent overlap)
+  const rungCount = 5 + Math.floor(Math.random() * 3); // 5-7
+  const rungPositions = [];
+  
+  for (let gap = 0; gap < n - 1; gap++) {
+    const used = new Set();
+    const gapRungs = [];
+    for (let r = 0; r < rungCount; r++) {
+      let y;
+      let attempts = 0;
+      do {
+        y = topY + 30 + Math.floor(Math.random() * (botY - topY - 60));
+        attempts++;
+      } while (used.has(Math.floor(y/20)) && attempts < 50);
+      if (attempts < 50) {
+        used.add(Math.floor(y/20));
+        gapRungs.push(y);
+      }
+    }
+    rungPositions.push(gapRungs);
+  }
+  
+  ladderData = { cols, topY, botY, rungPositions, shuffled };
+  
+  // Draw vertical lines
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth = 3;
+  cols.forEach(x => {
+    ctx.beginPath(); ctx.moveTo(x, topY); ctx.lineTo(x, botY); ctx.stroke();
+  });
+  
+  // Draw rungs
+  ctx.strokeStyle = rungColor;
+  ctx.lineWidth = 2.5;
+  rungPositions.forEach((gapRungs, gap) => {
+    gapRungs.forEach(y => {
+      ctx.beginPath();
+      ctx.moveTo(cols[gap], y);
+      ctx.lineTo(cols[gap+1], y);
+      ctx.stroke();
+    });
+  });
+  
+  // Draw names (top)
+  ctx.fillStyle = isDark ? '#f0e8d8' : '#2a2420';
+  ctx.font = 'bold 14px Noto Sans KR';
+  ctx.textAlign = 'center';
+  PEOPLE.forEach((p, i) => {
+    ctx.fillText(p, cols[i], topY - 10);
+  });
+  
+  // Draw chores (bottom) - hidden initially
+  ctx.fillStyle = isDark ? '#a09080' : '#8a7060';
+  ctx.font = '12px Noto Sans KR';
+  shuffled.forEach((c, i) => {
+    ctx.fillText('?', cols[i], botY + 20);
+  });
+  
+  document.getElementById('ladderRunBtn').style.display = '';
+  document.getElementById('ladderResult').innerHTML = '';
+  ladderResult = null;
+}
+
+function runLadder() {
+  if (!ladderData) return;
+  const { cols, topY, botY, rungPositions, shuffled } = ladderData;
+  
+  // Simulate each person
+  const result = {};
+  PEOPLE.forEach((person, startCol) => {
+    let col = startCol;
+    // Trace down
+    const steps = [];
+    let y = topY;
+    while (y < botY) {
+      y += 5;
+      // Check rungs at this y
+      for (let gap = 0; gap < cols.length - 1; gap++) {
+        rungPositions[gap].forEach(ry => {
+          if (Math.abs(y - ry) < 5) {
+            if (col === gap) { col = gap + 1; }
+            else if (col === gap + 1) { col = gap; }
+          }
+        });
+      }
+    }
+    result[person] = shuffled[col];
+  });
+  
+  ladderResult = result;
+  
+  // Redraw with chore names visible
+  const canvas = document.getElementById('ladderCanvas');
+  const ctx = canvas.getContext('2d');
+  const isDark = document.body.classList.contains('dark');
+  const { W, H } = { W: canvas.width, H: canvas.height };
+  
+  // Just update bottom labels
+  ctx.fillStyle = isDark ? '#e06840' : '#c85a3a';
+  ctx.font = 'bold 12px Noto Sans KR';
+  ctx.textAlign = 'center';
+  shuffled.forEach((c, i) => {
+    ctx.clearRect(cols[i]-30, botY+5, 60, 25);
+    ctx.fillStyle = isDark ? '#2e2820' : '#f0ebe0';
+    ctx.fillRect(cols[i]-30, botY+5, 60, 25);
+    ctx.fillStyle = isDark ? '#e06840' : '#c85a3a';
+    ctx.fillText(c, cols[i], botY + 20);
+  });
+  
+  // Show result
+  let html = '<div class="result-box"><div style="font-weight:700;margin-bottom:8px;">📊 결과</div>';
+  PEOPLE.forEach(p => {
+    html += `<div class="result-row"><span>${p}</span><span style="color:var(--accent);font-weight:700;">${result[p]}</span></div>`;
+  });
+  html += '</div>';
+  html += `<div class="btn-row" style="justify-content:center;"><button class="btn btn-primary" onclick="confirmLadderResult()">✅ 이 결과 적용</button></div>`;
+  document.getElementById('ladderResult').innerHTML = html;
+  state.tempGameResult = result;
+  saveState();
+}
+
+function confirmLadderResult() {
+  document.getElementById('gameResult').innerHTML = buildResultHTML(state.tempGameResult);
+  openModal('gameResultModal');
+}
+
+function renderDrawGame(container) {
+  container.innerHTML = `
+    <div style="text-align:center; padding: 20px 0;">
+      <div id="drawArea" style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:20px;"></div>
+      <button class="btn btn-primary" onclick="startDraw()">🎫 제비뽑기 시작</button>
+    </div>
+    <div id="drawResult"></div>
+  `;
+  renderDrawCards(null);
+}
+
+function renderDrawCards(revealed) {
+  const area = document.getElementById('drawArea');
+  if (!area) return;
+  area.innerHTML = '';
+  PEOPLE.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.style.cssText = 'width:70px;height:100px;border-radius:12px;border:2px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;cursor:pointer;transition:all 0.3s;font-size:13px;font-weight:700;';
+    if (revealed && revealed[p]) {
+      div.style.borderColor = 'var(--accent)';
+      div.style.background = 'color-mix(in srgb, var(--accent) 12%, var(--surface2))';
+      div.innerHTML = `<div style="font-size:20px;">🎫</div><div>${p}</div><div style="font-size:11px;color:var(--accent);">${revealed[p]}</div>`;
+    } else {
+      div.innerHTML = `<div style="font-size:24px;">🎴</div><div>${p}</div>`;
+    }
+    area.appendChild(div);
+  });
+}
+
+function startDraw() {
+  // Assign randomly, no duplicates
+  const shuffledChores = [...CHORES].sort(() => Math.random() - 0.5);
+  const result = {};
+  PEOPLE.forEach((p, i) => result[p] = shuffledChores[i]);
+  
+  // Animate reveal one by one
+  let idx = 0;
+  const partial = {};
+  const interval = setInterval(() => {
+    if (idx >= PEOPLE.length) {
+      clearInterval(interval);
+      state.tempGameResult = result;
+      saveState();
+      const dr = document.getElementById('drawResult');
+      if (dr) {
+        dr.innerHTML = `<div class="btn-row" style="justify-content:center;"><button class="btn btn-primary" onclick="confirmDrawResult()">✅ 이 결과 적용</button></div>`;
+      }
+      return;
+    }
+    partial[PEOPLE[idx]] = result[PEOPLE[idx]];
+    renderDrawCards(partial);
+    idx++;
+  }, 600);
+}
+
+function confirmDrawResult() {
+  document.getElementById('gameResult').innerHTML = buildResultHTML(state.tempGameResult);
+  openModal('gameResultModal');
+}
+
+function buildResultHTML(result) {
+  let html = '<div class="result-box">';
+  PEOPLE.forEach(p => {
+    html += `<div class="result-row"><span><strong>${p}</strong></span><span style="color:var(--accent);font-weight:700;">→ ${result[p]}</span></div>`;
+  });
+  html += '</div><div style="font-size:12px;color:var(--text2);margin-top:8px;text-align:center;">적용하면 즉시 역할이 변경됩니다.</div>';
+  return html;
+}
+
+function applyGameResult() {
+  if (!state.tempGameResult) return;
+  state.roles = { ...state.tempGameResult };
+  state.roleHistory.push({ date: getToday(), roles: { ...state.roles } });
+  state.tempGameResult = null;
+  saveState();
+  addLog('역할이 새롭게 배정되었습니다.', 'green');
+  closeModal('gameResultModal');
+  renderAll();
+  alert('✅ 역할이 변경되었습니다!');
+}
+
+// ============ PENALTY ============
+function calcPenalty(person, month) {
+  const days = getDaysInMonth(month);
+  const [y, m] = month.split('-').map(Number);
+  let missed = 0, exempted = 0;
+  const today = getToday();
+  
+  for (let d = 1; d <= days; d++) {
+    const dateStr = `${month}-${String(d).padStart(2,'0')}`;
+    // Only count up to today
+    if (dateStr > today) break;
+    // Only count from app start (today's penalty starts from today)
+    // Actually we count from start of month but skip days before app launch
+    // Per rules: 벌금은 오늘부터 시작
+    const appStart = '2026-03-06'; // today
+    if (dateStr < appStart) continue;
+    
+    const isExempt = state.exempts.some(e => e.person === person && e.date === dateStr);
+    if (isExempt) { exempted++; continue; }
+    
+    if (!state.photos[`${dateStr}_${person}`]) missed++;
+  }
+  
+  return { missed, exempted, amount: missed * PENALTY_AMOUNT };
+}
+
+function renderPenalty() {
+  const month = getThisMonth();
+  const container = document.getElementById('penaltyThisMonth');
+  
+  let html = '<table class="penalty-table"><thead><tr><th>이름</th><th>미인증</th><th>면제</th><th>벌금</th></tr></thead><tbody>';
+  let total = 0;
+  
+  PEOPLE.forEach(person => {
+    const { missed, exempted, amount } = calcPenalty(person, month);
+    total += amount;
+    html += `<tr>
+      <td><strong>${person}</strong></td>
+      <td style="color:var(--accent)">${missed}일</td>
+      <td style="color:var(--blue)">${exempted}일</td>
+      <td class="amount">${amount.toLocaleString()}원</td>
+    </tr>`;
+  });
+  html += `</tbody><tfoot><tr><td colspan="3" style="font-weight:700;">합계</td><td class="amount">${total.toLocaleString()}원</td></tr></tfoot></table>`;
+  container.innerHTML = html;
+
+  // Exempt section
+  const person = state.currentUser;
+  const myExempts = state.exempts.filter(e => e.person === person);
+  const exemptSection = document.getElementById('exemptSection');
+  
+  let ehtml = `<div style="font-size:13px;color:var(--text2);margin-bottom:10px;">${person}의 면제 날짜</div>`;
+  if (myExempts.length === 0) {
+    ehtml += `<div style="color:var(--text2);font-size:13px;margin-bottom:10px;">등록된 면제 날짜 없음</div>`;
+  } else {
+    ehtml += '<div class="exempt-list">';
+    myExempts.forEach((e, i) => {
+      ehtml += `<div class="exempt-item">
+        <div>
+          <div style="font-weight:600;">${formatDate(e.date)}</div>
+          <div style="font-size:11px;color:var(--text2);">${e.reason}</div>
+        </div>
+        <button class="del-btn" onclick="removeExempt('${e.person}','${e.date}')">✕</button>
+      </div>`;
+    });
+    ehtml += '</div>';
+  }
+  ehtml += `<div class="btn-row"><button class="btn btn-secondary" onclick="openModal('exemptModal')">+ 면제 날짜 추가</button></div>`;
+  exemptSection.innerHTML = ehtml;
+}
+
+function addExempt() {
+  const date = document.getElementById('exemptDate').value;
+  const reason = document.getElementById('exemptReason').value;
+  if (!date) { alert('날짜를 선택하세요.'); return; }
+  if (!reason) { alert('사유를 입력하세요.'); return; }
+  
+  const person = state.currentUser;
+  // Check duplicate
+  if (state.exempts.some(e => e.person === person && e.date === date)) {
+    alert('이미 등록된 날짜입니다.');
+    return;
+  }
+  state.exempts.push({ person, date, reason });
+  addLog(`${person}: ${formatDate(date)} 면제 등록 (${reason})`);
+  saveState();
+  closeModal('exemptModal');
+  renderPenalty();
+}
+
+function removeExempt(person, date) {
+  if (state.currentUser !== person && state.currentUser !== ADMIN) {
+    alert('본인 또는 관리자만 삭제 가능합니다.');
+    return;
+  }
+  state.exempts = state.exempts.filter(e => !(e.person === person && e.date === date));
+  saveState();
+  renderPenalty();
+}
+
+function showSettleModal() {
+  const month = getThisMonth();
+  const [y, m] = month.split('-').map(Number);
+  const monthName = `${y}년 ${m}월`;
+  
+  let html = `<div class="settle-header"><div style="font-size:14px;color:var(--text2);">${monthName} 벌금 정산</div></div>`;
+  
+  let total = 0;
+  PEOPLE.forEach(person => {
+    const { missed, exempted, amount } = calcPenalty(person, month);
+    total += amount;
+    html += `<div class="result-row">
+      <div>
+        <div style="font-weight:700;">${person}</div>
+        <div style="font-size:11px;color:var(--text2);">미인증 ${missed}일 / 면제 ${exempted}일</div>
+      </div>
+      <div class="amount">${amount.toLocaleString()}원</div>
+    </div>`;
+  });
+  html += `<div class="divider"></div><div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;"><span>총 벌금</span><span style="color:var(--accent);">${total.toLocaleString()}원</span></div>`;
+  
+  // Previous months
+  if (state.settled.length > 0) {
+    html += '<div class="divider"></div><div style="font-size:12px;color:var(--text2);font-weight:700;margin-bottom:8px;">이전 정산 내역</div>';
+    [...state.settled].reverse().forEach(s => {
+      const [sy, sm] = s.month.split('-').map(Number);
+      html += `<div style="font-size:13px;margin-bottom:6px;"><strong>${sy}년 ${sm}월</strong></div>`;
+      PEOPLE.forEach(p => {
+        const d = s.data[p];
+        if (d) html += `<div style="font-size:12px;color:var(--text2);padding-left:12px;">${p}: ${d.amount.toLocaleString()}원 (${d.missed}일 미인증)</div>`;
+      });
+    });
+  }
+  
+  document.getElementById('settleContent').innerHTML = html;
+  openModal('settleModal');
+}
+
+function doSettle() {
+  if (state.currentUser !== ADMIN) return;
+  const month = getThisMonth();
+  const data = {};
+  PEOPLE.forEach(p => {
+    data[p] = calcPenalty(p, month);
+  });
+  state.settled.push({ month, data, settledAt: getToday() });
+  
+  // Generate notice
+  const [y, m] = month.split('-').map(Number);
+  let noticeText = `📊 ${y}년 ${m}월 벌금 정산\n\n`;
+  PEOPLE.forEach(p => {
+    const d = data[p];
+    noticeText += `• ${p}: ${d.amount.toLocaleString()}원 (미인증 ${d.missed}일)\n`;
+  });
+  noticeText += `\n다음달 1일부터 새로 시작합니다.`;
+  
+  state.notices.unshift({ text: noticeText, date: getToday() });
+  addLog(`${month} 벌금 정산이 완료되었습니다.`, 'green');
+  saveState();
+  showSettleModal();
+  renderManage();
+}
+
+// ============ HISTORY ============
+let historyFilter = { person: '전체', chore: '전체' };
+
+function renderHistory() {
+  // Person tabs
+  const personTabs = document.getElementById('historyPersonTabs');
+  const choreTabs = document.getElementById('historyChoreTabs');
+  
+  let ptabs = '';
+  ['전체', ...PEOPLE].forEach(p => {
+    ptabs += `<button class="tab-btn ${historyFilter.person === p ? 'active' : ''}" onclick="setHistoryFilter('person','${p}',this)">${p}</button>`;
+  });
+  personTabs.innerHTML = ptabs;
+  
+  let ctabs = '';
+  ['전체', ...CHORES].forEach(c => {
+    ctabs += `<button class="tab-btn ${historyFilter.chore === c ? 'active' : ''}" onclick="setHistoryFilter('chore','${c}',this)">${c}</button>`;
+  });
+  choreTabs.innerHTML = ctabs;
+  
+  // Photos
+  const photosDiv = document.getElementById('historyPhotos');
+  const entries = Object.entries(state.photos).filter(([key, val]) => {
+    if (historyFilter.person !== '전체' && val.person !== historyFilter.person) return false;
+    if (historyFilter.chore !== '전체' && val.chore !== historyFilter.chore) return false;
+    return true;
+  }).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 18);
+  
+  if (entries.length === 0) {
+    photosDiv.innerHTML = '<div style="color:var(--text2);font-size:13px;text-align:center;padding:20px;">인증 사진 없음</div>';
+  } else {
+    let html = '<div class="photo-grid">';
+    entries.forEach(([key, val]) => {
+      html += `
+        <div>
+          <div class="photo-cell" onclick="viewPhoto('${val.url}','${val.person} - ${val.chore} (${formatDate(val.date)})')">
+            <img src="${val.url}" alt="">
+          </div>
+          <div class="photo-label">${val.person}<br>${val.chore}<br>${formatDate(val.date)}</div>
+        </div>
+      `;
+    });
+    html += '</div>';
+    photosDiv.innerHTML = html;
+  }
+  
+  // Activity log
+  const logDiv = document.getElementById('activityLog');
+  const logs = state.logs || [];
+  if (logs.length === 0) {
+    logDiv.innerHTML = '<div style="color:var(--text2);font-size:13px;">활동 내역 없음</div>';
+  } else {
+    let html = '';
+    [...logs].reverse().slice(0, 20).forEach(l => {
+      html += `<div class="history-item">
+        <div class="history-dot ${l.type === 'green' ? 'green' : ''}"></div>
+        <div>
+          <div style="font-size:13px;">${l.text}</div>
+          <div class="history-time">${l.time}</div>
+        </div>
+      </div>`;
+    });
+    logDiv.innerHTML = html;
+  }
+}
+
+function setHistoryFilter(type, val) {
+  historyFilter[type] = val;
+  renderHistory();
+}
+
+// ============ MANAGE (ADMIN) ============
+function renderManage() {
+  // Notices
+  const noticeList = document.getElementById('noticeList');
+  if (!noticeList) return;
+  
+  let html = '';
+  state.notices.forEach((n, i) => {
+    html += `<div class="notice-box">
+      ${n.text.replace(/\n/g,'<br>')}
+      <div class="notice-date">${formatDate(n.date)}</div>
+      ${state.currentUser === ADMIN ? `<button class="btn-sm" style="margin-top:8px;" onclick="removeNotice(${i})">삭제</button>` : ''}
+    </div>`;
+  });
+  noticeList.innerHTML = html || '<div style="color:var(--text2);font-size:13px;">공지 없음</div>';
+}
+
+function removeNotice(i) {
+  state.notices.splice(i, 1);
+  saveState();
+  renderManage();
+}
+
+function showNoticeModal() { openModal('noticeModal'); }
+
+function addNotice() {
+  const text = document.getElementById('noticeContent').value.trim();
+  if (!text) return;
+  state.notices.unshift({ text, date: getToday() });
+  saveState();
+  closeModal('noticeModal');
+  renderManage();
+}
+
+function showAdminExempt() {
+  // Show all exempts
+  let html = '<div style="font-size:13px;font-weight:700;margin-bottom:8px;">전체 면제 목록</div>';
+  if (state.exempts.length === 0) {
+    html += '<div style="color:var(--text2);font-size:13px;">없음</div>';
+  } else {
+    state.exempts.forEach(e => {
+      html += `<div class="exempt-item">
+        <div><strong>${e.person}</strong> - ${formatDate(e.date)}<br><span style="font-size:11px;color:var(--text2);">${e.reason}</span></div>
+        <button class="del-btn" onclick="removeExempt('${e.person}','${e.date}');renderAdminExemptList()">✕</button>
+      </div>`;
+    });
+  }
+  document.getElementById('adminExemptList').innerHTML = html;
+  openModal('adminExemptModal');
+}
+
+function renderAdminExemptList() {
+  let html = '<div style="font-size:13px;font-weight:700;margin-bottom:8px;">전체 면제 목록</div>';
+  if (state.exempts.length === 0) html += '<div style="color:var(--text2);font-size:13px;">없음</div>';
+  else state.exempts.forEach(e => {
+    html += `<div class="exempt-item">
+      <div><strong>${e.person}</strong> - ${formatDate(e.date)}<br><span style="font-size:11px;color:var(--text2);">${e.reason}</span></div>
+      <button class="del-btn" onclick="removeExempt('${e.person}','${e.date}');renderAdminExemptList()">✕</button>
+    </div>`;
+  });
+  document.getElementById('adminExemptList').innerHTML = html;
+}
+
+function adminAddExempt() {
+  const person = document.getElementById('adminExemptPerson').value;
+  const date = document.getElementById('adminExemptDate').value;
+  const reason = document.getElementById('adminExemptReason').value;
+  if (!date || !reason) { alert('날짜와 사유를 입력하세요.'); return; }
+  if (state.exempts.some(e => e.person === person && e.date === date)) {
+    alert('이미 등록된 날짜입니다.');
+    return;
+  }
+  state.exempts.push({ person, date, reason });
+  saveState();
+  renderAdminExemptList();
+  renderPenalty();
+}
+
+function showAdminPhotoEdit() {
+  // Open history with ability to delete
+  showSection('history', document.querySelector('.nav-btn:nth-child(5)'));
+}
+
+function showAdminPenalty() { showSection('penalty', document.querySelector('.nav-btn:nth-child(4)')); }
+function showAdminSettle() { doSettle(); }
+
+// ============ UTILS ============
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function viewPhoto(url, caption) {
+  document.getElementById('photoFullImg').src = url;
+  document.getElementById('photoFullCaption').textContent = caption;
+  document.getElementById('photoFullView').classList.add('open');
+}
+function closePhotoFull() { document.getElementById('photoFullView').classList.remove('open'); }
+
+function addLog(text, type = '') {
+  if (!state.logs) state.logs = [];
+  const now = new Date();
+  state.logs.push({
+    text,
+    type,
+    time: `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`
+  });
+  if (state.logs.length > 100) state.logs = state.logs.slice(-100);
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+// ============ INIT ============
+// Auto-login if was logged in
+if (state.currentUser) {
+  login(state.currentUser);
+}
+
+// Check monthly reset
+function checkMonthlyReset() {
+  const today = getToday();
+  const [y, m, d] = today.split('-').map(Number);
+  if (d === 1) {
+    const lastMonth = m === 1 ? `${y-1}-12` : `${y}-${String(m-1).padStart(2,'0')}`;
+    if (!state.settled.find(s => s.month === lastMonth)) {
+      // Auto settle would happen here - just notify
+    }
+  }
+}
+checkMonthlyReset();
+</script>
+</body>
+</html>
+<script>
+function login(person) { 
+  // 관리자(진주)일 경우 핀번호 확인
+  if (person === ADMIN) { 
+    const pin = prompt("관리자 핀번호를 입력하세요:"); 
+    if (pin !== "1234") { 
+      alert("핀번호가 일치하지 않습니다."); 
+      return; 
+    } 
+  } 
+  state.currentUser = person; 
+  saveState(); 
+  document.getElementById('loginScreen').style.display = 'none'; 
+  document.getElementById('app').style.display = 'block'; 
+  
+  const now = new Date(); 
+  document.getElementById('headerSub').textContent = `${now.getMonth()+1}월 ${now.getDate()}일 (${['일','월','화','수','목','금','토'][now.getDay()]})`; 
+  
+  const tag = document.getElementById('userTag'); 
+  if (person === ADMIN) { 
+    tag.innerHTML = `<span class="tag tag-admin">👑 ${person}</span>`; 
+    document.getElementById('manageTab').style.display = ''; 
+    document.getElementById('settleBtn').style.display = ''; 
+  } else { 
+    tag.innerHTML = `<span class="tag tag-user">${person}</span>`; 
+    document.getElementById('manageTab').style.display = 'none'; 
+    document.getElementById('settleBtn').style.display = 'none'; 
+  } 
+  renderAll(); 
+}
+</script>
