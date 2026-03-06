@@ -550,10 +550,6 @@
         <div class="card-title"><span class="icon">📋</span> 오늘의 집안일</div>
         <div class="chore-grid" id="choreGrid"></div>
       </div>
-      <div class="card">
-        <div class="card-title"><span class="icon">📊</span> 이번달 현황</div>
-        <div id="monthProgress"></div>
-      </div>
     </div>
 
     <!-- SCHEDULE -->
@@ -945,7 +941,18 @@ function renderToday() {
         actionHtml = `<img class="photo-thumb" src="${photo.url}" onclick="viewPhoto('${photo.url}','${person} - ${chore}')" alt="인증사진">`;
       }
     }
-    
+    // renderToday 함수 내 사진 표시 부분 수정
+if (photo) {
+  actionHtml = `<img class="photo-thumb" src="${photo.url}" onclick="viewPhoto('${photo.url}','${person} - ${chore}')" alt="인증사진">`;
+  if (isMe) {
+    actionHtml += `
+      <div class="btn-row" style="margin-top:5px;">
+        <button class="btn-sm" onclick="openUpload('${person}','${chore}','${today}')">교체</button>
+        <button class="btn-sm" style="color:var(--accent); border-color:var(--accent);" onclick="deletePhoto('${person}','${today}')">삭제</button>
+      </div>`;
+  }
+}
+
     div.innerHTML = `
       <div class="chore-name">${chore}</div>
       <div class="chore-person">${person}</div>
@@ -1038,7 +1045,15 @@ function submitPhoto() {
   };
   reader.readAsDataURL(input.files[0]);
 }
-
+function deletePhoto(person, date) {
+  if (confirm(`${person}님의 인증 사진을 삭제하시겠습니까?`)) {
+    const key = `${date}_${person}`;
+    delete state.photos[key]; // 해당 날짜/인원의 사진 데이터 제거
+    saveState();    // 변경사항 저장
+    renderToday();  // 화면 새로고침
+    alert("사진이 삭제되었습니다.");
+  }
+}
 // ============ SCHEDULE ============
 function renderSchedule() {
   const cur = document.getElementById('currentSchedule');
