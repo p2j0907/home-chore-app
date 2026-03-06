@@ -8,27 +8,29 @@
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  /* 화면 깨짐 방지를 위한 핵심 디자인 코드 */
-  :root { --bg: #f5f0e8; --surface: #fffdf8; --border: #d8d0c0; --accent: #c85a3a; --green: #4a9060; }
-  body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); margin: 0; padding: 0; }
-  .header { background: var(--surface); padding: 15px; border-bottom: 2px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  /* 화면 깨짐 방지를 위한 스타일 강제 적용 */
+  :root { --bg: #f5f0e8; --surface: #fffdf8; --border: #d8d0c0; --accent: #c85a3a; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); margin: 0; padding: 0; color: #2a2420; }
+  .header { background: var(--surface); padding: 15px 20px; border-bottom: 2px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
   .header-title { font-family: 'Gowun Dodum', cursive; font-size: 22px; color: var(--accent); }
-  .main { padding: 20px; max-width: 600px; margin: 0 auto; }
-  .card { background: var(--surface); border-radius: 16px; padding: 20px; border: 1.5px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-  .chore-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-  .chore-item { background: #fdfaf5; border: 1.5px solid var(--border); border-radius: 12px; padding: 15px; text-align: center; }
-  .photo-thumb { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; margin-top: 10px; }
-  .btn-upload { width: 100%; margin-top: 10px; padding: 8px; border-radius: 8px; border: 1px dashed var(--accent); cursor: pointer; background: transparent; color: var(--accent); }
+  .main { padding: 20px; max-width: 500px; margin: 0 auto; }
+  .card { background: var(--surface); border-radius: 16px; padding: 20px; border: 1.5px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+  .chore-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .chore-item { background: #fcfaf7; border: 1px solid var(--border); border-radius: 12px; padding: 15px; text-align: center; }
+  .photo-thumb { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; margin-top: 10px; border: 1px solid var(--border); }
+  .btn { width: 100%; padding: 10px; border-radius: 8px; border: none; cursor: pointer; font-weight: 700; margin-top: 10px; }
+  .btn-upload { background: var(--accent); color: white; }
   .login-screen { height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); }
-  .user-btn { padding: 15px 30px; margin: 5px; border-radius: 10px; border: 2px solid var(--border); background: var(--surface); cursor: pointer; font-weight: 700; }
+  .user-btn { padding: 12px 20px; margin: 5px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--surface); cursor: pointer; width: 120px; font-weight: 700; }
 </style>
 </head>
 <body>
 
 <div id="loginScreen" class="login-screen">
   <div style="text-align:center;">
-    <h1 style="color:var(--accent); font-family:'Gowun Dodum';">🏠 우리집</h1>
-    <div id="userBtns">
+    <h1 style="font-family:'Gowun Dodum'; color:var(--accent);">🏠 우리집</h1>
+    <p>누구세요?</p>
+    <div style="display:grid; grid-template-columns: 1fr 1fr;">
       <button class="user-btn" onclick="login('진철')">진철</button>
       <button class="user-btn" onclick="login('진주')">진주 👑</button>
       <button class="user-btn" onclick="login('은수')">은수</button>
@@ -40,24 +42,24 @@
 <div id="app" style="display:none;">
   <div class="header">
     <div class="header-title">🏠 우리집</div>
-    <div id="userInfo" style="font-weight:700;"></div>
-    <button onclick="location.reload()">로그아웃</button>
+    <div id="userTag" style="font-size:14px; font-weight:700;"></div>
+    <button onclick="location.reload()" style="font-size:11px;">로그아웃</button>
   </div>
   <div class="main">
     <div class="card">
-      <div style="font-weight:700;">📅 오늘의 역할</div>
+      <h3 style="margin-top:0;">📋 오늘의 집안일</h3>
       <div id="choreGrid" class="chore-grid"></div>
     </div>
   </div>
 </div>
 
 <script>
-// 사용자님의 Firebase 실제 설정값 적용
+// 이미지 image_ce29ba.png에 나온 실제 주소를 반영했습니다.
 const firebaseConfig = {
   apiKey: "AIzaSyDARPxh-WS07lWMeo4IBy4MgWkLpaRxbkQ",
   authDomain: "familyhousehold-cf5a6.firebaseapp.com",
   projectId: "familyhousehold-cf5a6",
-  databaseURL: "https://familyhousehold-cf5a6-default-rtdb.firebaseio.com", // 수동 보완
+  databaseURL: "https://familyhousehold-cf5a6-default-rtdb.asia-southeast1.firebasedatabase.app",
   storageBucket: "familyhousehold-cf5a6.firebasestorage.app",
   messagingSenderId: "1087083698440",
   appId: "1:1087083698440:web:7ddd9f45c28d06368274bd"
@@ -73,16 +75,14 @@ function login(name) {
   currentUser = name;
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  document.getElementById('userInfo').textContent = name + "님";
-  syncData();
+  document.getElementById('userTag').innerText = name + "님";
+  listenData();
 }
 
-function syncData() {
+function listenData() {
   const today = new Date().toISOString().slice(0, 10);
-  // 서버에서 데이터 실시간 가져오기
   db.ref('dailyPhotos/' + today).on('value', (snapshot) => {
-    const data = snapshot.val() || {};
-    render(data);
+    render(snapshot.val() || {});
   });
 }
 
@@ -90,26 +90,26 @@ function render(data) {
   const grid = document.getElementById('choreGrid');
   grid.innerHTML = '';
   Object.keys(ROLES).forEach(person => {
+    const photo = data[person];
     const item = document.createElement('div');
     item.className = 'chore-item';
-    const photo = data[person];
-    
     item.innerHTML = `
-      <div style="font-size:12px; color:#666;">${ROLES[person]}</div>
-      <div style="font-size:16px; font-weight:700;">${person}</div>
-      ${photo ? `<img src="${photo}" class="photo-thumb">` : `<div style="color:var(--accent); font-size:11px; margin-top:10px;">미완료</div>`}
-      ${person === currentUser ? `<button class="btn-upload" onclick="uploadPhoto('${person}')">📷 인증하기</button>` : ''}
+      <div style="font-size:11px; color:#888;">${ROLES[person]}</div>
+      <div style="font-weight:700;">${person}</div>
+      ${photo ? `<img src="${photo}" class="photo-thumb">` : `<div style="margin-top:10px; font-size:11px; color:red;">미인증</div>`}
+      ${person === currentUser ? `<button class="btn btn-upload" onclick="addPhoto('${person}')">📷 사진 올리기</button>` : ''}
     `;
     grid.appendChild(item);
   });
 }
 
-function uploadPhoto(person) {
-  const url = prompt("사진 이미지 주소를 입력하세요 (테스트용):"); 
+function addPhoto(person) {
+  const url = prompt("사진 주소(URL)를 입력하세요:");
   if (url) {
     const today = new Date().toISOString().slice(0, 10);
-    db.ref('dailyPhotos/' + today + '/' + person).set(url);
-    alert("인증 완료!");
+    db.ref('dailyPhotos/' + today + '/' + person).set(url)
+      .then(() => alert("인증 성공!"))
+      .catch(e => alert("오류 발생: " + e.message));
   }
 }
 </script>
